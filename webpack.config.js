@@ -24,6 +24,18 @@ module.exports = {
                         minimize: true
                     }
                 }
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    { loader: 'style-loader' },
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            modules: true
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -36,11 +48,11 @@ module.exports = {
         new webpack.NamedModulesPlugin(),
         new webpack.HotModuleReplacementPlugin()
     ],
-    devServer:{
+    devServer: {
         contentBase: path.join(__dirname, "dist"),
-        compress:true,
+        compress: true,
         hot: true,
         port: 8033,
-        host:'127.0.0.1',
+        host: '127.0.0.1',
     }
 }
