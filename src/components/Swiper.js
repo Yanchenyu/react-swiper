@@ -1,27 +1,92 @@
 import React, { Component, Fragment } from 'react'
 
+const styles = require('../styles/swiper.css')
+
+let imgContainerDom = null,
+    imgContainerDomStyle = null,
+    imgsContainerStyle = {},
+    startX = 0,
+    screenWidth = 0,
+    minX = 0,
+    leftStartX = 0;
+
 export default class Swiper extends Component {
 
-    constructor (props) {
+    constructor(props) {
         super(props);
-        console.log(props);
+        imgsContainerStyle = {
+            width: (props.imgs.length + 2) * 100 + '%'
+        }
+        this.factIndex = 0;     // 实际当前下标
         this.state = {
-            imgs: [],
+            imgs: [props.imgs[props.imgs.length - 1], ...props.imgs, props.imgs[0]],
             isLoading: true,    // 初始化loading浮层
+            showIndex: 1,   // 展示的图片下标（非实际）
         }
     }
 
+    componentDidMount() {
+        imgContainerDomStyle = document.querySelector('#imgsContainer').style;
+        screenWidth = window.screen.width;
+        this.factIndex += 1;
+        imgContainerDomStyle.left = -screenWidth + 'px';
+        imgContainerDomStyle.transition = 'all 0.5s';
+        this.setState({
+            isLoading: false
+        })
+        this.interval = setInterval(this.animateShow, 1500);
+    }
+
+    animateShow = () => {
+
+        let { showIndex, imgs } = this.state;
+
+        if (showIndex < this.props.imgs.length) {
+            // 普通情况下
+            this.setState({
+                showIndex: showIndex + 1
+            })
+
+        } else {
+            this.setState({
+                showIndex: 1
+            })
+        }
+
+        this.factIndex += 1;
+
+        if (this.factIndex === imgs.length - 1) {            
+            setTimeout(() => {
+                this.factIndex = 1;
+                imgContainerDomStyle.transition = '';
+                imgContainerDomStyle.left = -screenWidth + 'px';
+            }, 500);
+        }
+
+        imgContainerDomStyle.transition = 'all 0.5s';
+        imgContainerDomStyle.left = -this.factIndex * screenWidth + 'px';
+
+    }
+
     render() {
-        return <Fragment>
-            {
-                this.state.isLoading ? <img width="100%" src={this.props.loadingImg} />
-                : (
-                    this.props.imgs.map((item, index) => {
-                        return <img src={item} key={item + index + '_'} />
+
+        return <div className={styles.swiperContainer}>
+            {this.state.isLoading && <img width="100%" src={this.props.loadingImg} />}
+            <div id="imgsContainer" style={imgsContainerStyle} className={styles.imgsContainer}>
+                {
+                    this.state.imgs.map((item, index) => {
+                        return <li key={item + index + '_'} className={styles.imgsItemContainer}>
+                            <img width="100%" height="100%" src={item} />
+                        </li>
                     })
-                )
+                }
+            </div>
+            {
+                this.props.imgs.length > 1 ? <span className={styles.imgIndex}>
+                    <em style={{ fontStyle: 'normal' }}>{this.state.showIndex}/{this.props.imgs.length}</em>
+                </span> : null
             }
-        </Fragment>
+        </div>
     }
 }
 
@@ -33,5 +98,5 @@ Swiper.defaultProps = {
         "https://dimg02.c-ctrip.com/images/100d0o000000f4k9093A3_C_1136_640_Q80.jpg?proc=source/trip",
         "https://dimg04.c-ctrip.com/images/350k0z000000mrbno3450_C_1136_640_Q80.jpg?proc=source/trip"
     ],
-    loadingImg: "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1545539055478&di=37916690314c74bb947310b71b611bfd&imgtype=0&src=http%3A%2F%2Fhbimg.b0.upaiyun.com%2F5aa02f4b68d20c9d8ed9caf527e3ba402cb6c4951171-3eWLZC_fw658"
+    loadingImg: "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_15000&sec=1545539055478&di=37916690314c74bb947310b71b611bfd&imgtype=0&src=http%3A%2F%2Fhbimg.b0.upaiyun.com%2F5aa02f4b68d20c9d8ed9caf527e3ba402cb6c4951171-3eWLZC_fw658"
 }
