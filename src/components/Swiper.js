@@ -1,31 +1,35 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 
 const styles = require('../styles/swiper.css')
 
-let imgContainerDom = null,
-    imgContainerDomStyle = null,
+let imgContainerDomStyle = null,
     imgsContainerStyle = {},
     startX = 0,     // 触摸事件触发时相对于屏幕的起始位置
     screenWidth = 0,
-    minX = 0,
-    leftStartX = 0;     // 触摸事件触发时当前轮播容器的起始位置
+    leftStartX = 0,     // 触摸事件触发时当前轮播容器的起始位置
+    isSingleImg = true // 是否是单张图片
 
 export default class Swiper extends Component {
 
     constructor(props) {
         super(props);
+        isSingleImg = props.imgs.length === 1;
         imgsContainerStyle = {
-            width: (props.imgs.length + 2) * 100 + '%'
+            width: isSingleImg ? '100%' : (props.imgs.length + 2) * 100 + '%',
         }
-        this.factIndex = 0;     // 实际当前下标
+        this.factIndex = 0 // 实际当前下标
         this.state = {
-            imgs: [props.imgs[props.imgs.length - 1], ...props.imgs, props.imgs[0]],
-            isLoading: true,    // 初始化loading浮层
-            showIndex: 1,   // 展示的图片下标（非实际）
+            imgs: isSingleImg ? props.imgs : [props.imgs[props.imgs.length - 1], ...props.imgs, props.imgs[0]],
+            isLoading: isSingleImg ? false : true, // 初始化loading浮层
+            showIndex: 1, // 展示的图片下标（非实际）
         }
+        clearInterval(this.interval)
     }
 
     componentDidMount() {
+        if (isSingleImg) {
+            return
+        }
         imgContainerDomStyle = document.querySelector('#imgsContainer').style;
         screenWidth = window.screen.width;
         this.factIndex += 1;
@@ -35,6 +39,10 @@ export default class Swiper extends Component {
             isLoading: false
         })
         this.interval = setInterval(this.animateShow, this.props.intervalTime);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval)
     }
 
     // 循环动画
@@ -70,6 +78,9 @@ export default class Swiper extends Component {
     }
 
     touchStart = (e) => {
+        if (isSingleImg) {
+            return
+        }
         clearInterval(this.interval);
         imgContainerDomStyle.transition = ''
         startX = e.changedTouches[0].pageX
@@ -77,12 +88,18 @@ export default class Swiper extends Component {
     }
 
     touchMove = e => {
+        if (isSingleImg) {
+            return
+        }
         let moveX = e.changedTouches[0].pageX - startX
         let leftNow = leftStartX + moveX
         imgContainerDomStyle.left = leftNow + 'px'
     }
 
     touchEnd = () => {
+        if (isSingleImg) {
+            return
+        }
         let endX = parseFloat(imgContainerDomStyle.left),
             baseposition = -this.factIndex * screenWidth,
             currentpositionLeft = baseposition - screenWidth / 2,
@@ -97,7 +114,7 @@ export default class Swiper extends Component {
                 this.setState({
                     showIndex: this.state.showIndex + 1
                 })
-    
+
             } else {
                 this.setState({
                     showIndex: 1
@@ -113,7 +130,7 @@ export default class Swiper extends Component {
             }
 
             this.factIndex += 1;
-            
+
         } else if (endX > currentpositionRight) {
             // 右滑
             if (this.state.showIndex === 1) {
@@ -133,7 +150,7 @@ export default class Swiper extends Component {
                     imgContainerDomStyle.left = -screenWidth * this.factIndex + 'px';
                 }, 300);
             }
-            
+
             this.factIndex -= 1;
         }
 
